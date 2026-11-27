@@ -1,0 +1,5 @@
+skia-python
+soundfile
+scipy
+numpy
+piper-tts
