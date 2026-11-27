@@ -1,0 +1,73 @@
+# Render MyHeritage — 2D animated explainer (Bahasa Indonesia)
+#
+# Renders the full ~2:57 video on GitHub Actions: Piper TTS voices are
+# generated on the runner, all 17 shots are rendered with skia-python +
+# ffmpeg, the audio mix is synthesized, and the final MP4 is uploaded as
+# an artifact. No binary WAVs/MP4s are stored in the repo.
+#
+# NOTE: shots could be split across a matrix of parallel jobs to render
+# faster (e.g. 2-4 jobs rendering `render.py <idx...>` each, then joining);
+# this workflow deliberately uses ONE job for simplicity and reliability.
+
+name: Render MyHeritage
+
+on:
+  workflow_dispatch:
+
+jobs:
+  render:
+    name: Render full video
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg libegl1 libgl1
+
+      - name: Install Python deps
+        run: pip install -r requirements.txt
+
+      - name: Download Piper voice (id_ID-news_tts-medium)
+        run: |
+          mkdir -p ~/models
+          cd ~/models
+          curl -sSL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-id_ID-news_tts-medium.tar.bz2
+          tar --no-same-owner -xjf vits-piper-id_ID-news_tts-medium.tar.bz2
+          ls ~/models/vits-piper-id_ID-news_tts-medium/
+
+      - name: Download fonts
+        run: |
+          mkdir -p ~/vid/fonts
+          cd ~/vid/fonts
+          G=https://raw.githubusercontent.com/google/fonts/main
+          curl -sSL -O $G/ofl/caveatbrush/CaveatBrush-Regular.ttf
+          curl -sSL -O $G/ofl/kalam/Kalam-Bold.ttf
+          curl -sSL -O $G/apache/permanentmarker/PermanentMarker-Regular.ttf
+          curl -sSL -O $G/ofl/patrickhand/PatrickHand-Regular.ttf
+          ls -la ~/vid/fonts/
+
+      - name: Generate voices (Piper TTS)
+        run: python3 gen_voices.py
+
+      - name: Render all shots
+        run: python3 render.py all
+
+      - name: Audio mix
+        run: python3 audio_mix.py
+
+      - name: Join + mux final MP4
+        run: bash join.sh
+
+      - name: Upload final MP4
+        uses: actions/upload-artifact@v4
+        with:
+          name: myheritage-final
+          path: myheritage-final.mp4
+          retention-days: 7
