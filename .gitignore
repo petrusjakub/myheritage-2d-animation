@@ -1,0 +1,9 @@
+# Generated on the runner / locally — never committed
+venv/
+__pycache__/
+audio/
+shots/
+frames/
+*.mp4
+*.wav
+/tmp/
