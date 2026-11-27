@@ -520,7 +520,7 @@ def sh_phone(c, gt, S):
     dm, db = talk('d5', gt, 'smile') if d_spk else ('smile', 0)
     im, ib = talk('i3', gt, 'smile') if i_spk else ('smile', 0)
     draw_char3(c, 480, 1390, 1.9, DIMAS, face=0.5, eyes='closed' if blink(gt, 2.3, .2) else ('half' if d_spk else 'dot'),
-               mouth=dm, brow=.5 if d_spk else 0, arms=(('phone', 'down'), 'down'),
+               mouth=dm, brow=.5 if d_spk else 0, arms=(('phone', 'down', 0), 'down'),
                bob=db * .6, light=1, rim='#FFE6B0')
     # phone in Dimas' hand
     rect(c, 480 + 90, 1390 - 560, 480 + 150, 1390 - 380, '#2B2D3C', LW * .7, r=10)
